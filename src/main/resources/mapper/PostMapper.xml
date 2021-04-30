@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gll.onlinelearning.mapper.PostMapper">
+    <!-- 查询帖子时先根据评论数倒叙排，再按最新修改时间排
+     多个字段时，需要各自定义升降序
+     -->
+    <select id="getPageOfPostByContent" resultMap="customResultMap">
+        select p.* from post p
+        where 1=1
+        <if test="searchContent !=null and searchContent !=''">
+            and p.content like concat('%',#{searchContent},'%')
+        </if>
+        ORDER BY p.replynum desc, p.gmt_modified desc
+        LIMIT #{offset},#{limit}
+    </select>
+
+    <resultMap id="customResultMap" type="PageOfPostResultVO">
+        <id column="id" property="id"/>
+        <!-- 注意该字段要指定解析器 -->
+        <result column="pictures" property="pictures" jdbcType="VARCHAR"
+                typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler"/>
+        <association property="uInfo" column="uid" javaType="SimpleUserVO"
+                     select="com.gll.onlinelearning.mapper.UserMapper.getSimpleUserById">
+        </association>
+        <collection property="likeList" column="id" ofType="AllLoveResultVO"
+                    select="com.gll.onlinelearning.mapper.LoveMapper.getLoveListByPostId"/>
+        <collection property="commentList" column="id" ofType="AllCommentResultVO"
+                    select="com.gll.onlinelearning.mapper.CommentMapper.getAllCommentByPostId"/>
+    </resultMap>
+
+    <select id="countOfPostByContent" resultType="int">
+        select count(1) from post p
+        where 1=1
+        <if test="searchContent !=null and searchContent !=''">
+            and p.content like concat('%',#{searchContent},'%')
+        </if>
+    </select>
+
+    <update id="updateReplynumOfPost">
+        update post set replynum = replynum + #{deta}
+        where id = #{postId}
+    </update>
+</mapper>

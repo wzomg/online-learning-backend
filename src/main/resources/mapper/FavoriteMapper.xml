@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gll.onlinelearning.mapper.FavoriteMapper">
+    <select id="pageOfFavoriteByUidOrTitle" resultType="PageOfFavoriteResultVO">
+        select f.id, s.title, s.link, f.gmt_create from favorite f, subject s
+        where f.subject_id = s.id and f.uid = #{uid} and f.is_deleted = 0
+        <if test="searchContent !=null and searchContent !=''">
+            and s.title like concat('%',#{searchContent},'%')
+        </if>
+        ORDER BY f.gmt_modified desc
+        LIMIT #{offset},#{limit}
+    </select>
+
+    <select id="countOfFavoriteByUidOrTitle" resultType="int">
+        select count(1) from favorite f, subject s
+        where f.subject_id = s.id and f.uid = #{uid} and f.is_deleted = 0
+        <if test="searchContent !=null and searchContent !=''">
+            and s.title like concat('%',#{searchContent},'%')
+        </if>
+    </select>
+
+    <select id="selectFavorite" resultType="Favorite">
+        SELECT id, uid, subject_id, is_deleted, gmt_create, gmt_modified FROM favorite
+        WHERE subject_id = #{subjectId} and uid = #{uid}
+    </select>
+
+    <update id="updateFavorite">
+        update favorite set is_deleted = #{newStatus} where subject_id = #{subjectId} and uid = #{uid} and is_deleted = #{oldStatus}
+    </update>
+</mapper>
